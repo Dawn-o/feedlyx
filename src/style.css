@@ -129,3 +129,50 @@
         @apply max-w-4xl mx-auto px-6 py-8;
     }
 }
+
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6 {
+    letter-spacing: -0.025em;
+    transition: color 0.2s ease;
+}
+
+.article-content p {
+    letter-spacing: 0.01em;
+}
+
+.article-content code {
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.article-content a:hover {
+    transform: translateY(-1px);
+    transition: transform 0.2s ease;
+}
+
+.article-content pre {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.article-content blockquote {
+    position: relative;
+}
+
+.article-content blockquote::before {
+    content: '"';
+    font-size: 4rem;
+    color: hsl(var(--primary) / 0.2);
+    position: absolute;
+    left: -10px;
+    top: -10px;
+    font-family: serif;
+}
+
+.article-content .highlight__panel {
+    display: none;
+}

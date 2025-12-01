@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed, nextTick, watch } from "vue";
 import { useRoute } from "vue-router";
-import { marked } from "marked";
-import { useFeedStore } from "@/stores/feedStore";
+import hljs from "highlight.js";
+import "highlight.js/styles/base16/twilight.css";
+import { useFeedStore, type FullArticle } from "@/stores/feedStore";
+import { processArticleHtml } from "@/utils/processArticleHtml";
 import ArticleHeader from "@/components/ArticleHeader.vue";
 import SkeletonArticle from "@/components/SkeletonArticle.vue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,67 +12,63 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Heart, MessageCircle, Clock } from "lucide-vue-next";
 
-interface FullArticle {
-    id: number;
-    title: string;
-    body_markdown: string;
-    published_at: string;
-    user: {
-        name: string;
-        profile_image_90: string;
-    };
-    tags: string[];
-    positive_reactions_count: number;
-    comments_count: number;
-    reading_time_minutes: number;
-    url: string;
-}
-
 const route = useRoute();
 const feedStore = useFeedStore();
 const article = ref<FullArticle | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
+const contentRef = ref<HTMLElement>();
 
-const fetchArticle = async (id: string) => {
-    try {
-        const response = await fetch(`https://dev.to/api/articles/${id}`);
-        if (!response.ok) throw new Error("Failed to fetch article");
-        article.value = await response.json();
-    } catch (err) {
-        error.value = err instanceof Error ? err.message : "An error occurred";
-    } finally {
-        loading.value = false;
-    }
-};
+const processedBodyHtml = computed(() => {
+    if (!article.value) return "";
+    return processArticleHtml(article.value.body_html);
+});
 
 const fetchUserArticles = async (username: string, slug: string) => {
     try {
         const response = await fetch(
-            `https://dev.to/api/articles?username=${username}&per_page=1000`,
+            `https://dev.to/api/articles?username=${username}&per_page=30`,
         );
         if (!response.ok) throw new Error("Failed to fetch user articles");
         const data = await response.json();
         const found = data.find((item: any) => item.slug === slug);
         if (found) {
-            fetchArticle(found.id.toString());
+            const fullArticle = await feedStore.fetchArticleDetail(found.id);
+            if (fullArticle) {
+                article.value = fullArticle;
+            } else {
+                error.value = "Article not found.";
+            }
         } else {
             error.value = "Article not found.";
-            loading.value = false;
         }
+        loading.value = false;
     } catch (err) {
         error.value = err instanceof Error ? err.message : "An error occurred";
         loading.value = false;
     }
 };
 
-onMounted(() => {
+watch(article, async () => {
+    if (article.value) {
+        await nextTick();
+        hljs.highlightAll();
+    }
+});
+
+onMounted(async () => {
     const username = route.params.username as string;
     const slug = route.params.slug as string;
     const key = `${username}-${slug}`;
     const id = feedStore.fullSlugToId.get(key);
     if (id) {
-        fetchArticle(id.toString());
+        const fullArticle = await feedStore.fetchArticleDetail(id);
+        if (fullArticle) {
+            article.value = fullArticle;
+        } else {
+            error.value = "Article not found.";
+        }
+        loading.value = false;
     } else {
         fetchUserArticles(username, slug);
     }
@@ -99,10 +97,35 @@ onMounted(() => {
                         <div>
                             <p class="font-medium">{{ article.user.name }}</p>
                             <p class="text-sm text-muted-foreground">
+                                Posted on
                                 {{
-                                    new Date(
-                                        article.published_at,
-                                    ).toLocaleDateString()
+                                    (() => {
+                                        const currentYear =
+                                            new Date().getFullYear();
+                                        const articleDate = new Date(
+                                            article.published_at,
+                                        );
+                                        const articleYear =
+                                            articleDate.getFullYear();
+                                        if (currentYear === articleYear) {
+                                            return articleDate.toLocaleDateString(
+                                                "en-US",
+                                                {
+                                                    month: "long",
+                                                    day: "numeric",
+                                                },
+                                            );
+                                        } else {
+                                            return articleDate.toLocaleDateString(
+                                                "en-US",
+                                                {
+                                                    month: "long",
+                                                    day: "numeric",
+                                                    year: "numeric",
+                                                },
+                                            );
+                                        }
+                                    })()
                                 }}
                             </p>
                         </div>
@@ -133,18 +156,10 @@ onMounted(() => {
                 </CardHeader>
                 <CardContent>
                     <div
-                        v-html="marked(article.body_markdown)"
-                        class="prose prose-sm max-w-none"
+                        ref="contentRef"
+                        v-html="processedBodyHtml"
+                        class="prose max-w-none article-content"
                     ></div>
-                    <div class="mt-6 pt-6 border-t">
-                        <a
-                            :href="article.url"
-                            target="_blank"
-                            class="text-primary hover:underline"
-                        >
-                            Read on Dev.to →
-                        </a>
-                    </div>
                 </CardContent>
             </Card>
         </div>

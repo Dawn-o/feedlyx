@@ -2,7 +2,7 @@
 import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useInfiniteScroll } from "@vueuse/core";
-import { useFeedStore, type Article } from "@/stores/feedStore";
+import { useFeedStore } from "@/stores/feedStore";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -36,7 +36,7 @@ const handleSearch = (event: Event) => {
     feedStore.setSearchQuery(target.value);
 };
 
-const goToArticle = (article: Article) => {
+const goToArticle = (article: any) => {
     router.push(`/${article.username}/${article.slug}`);
 };
 </script>
@@ -75,6 +75,7 @@ const goToArticle = (article: Article) => {
                         <AvatarImage
                             :src="article.profileImage ?? ''"
                             :alt="article.author"
+                            loading="lazy"
                         />
                         <AvatarFallback>{{
                             article.author.charAt(0).toUpperCase()
@@ -141,7 +142,10 @@ const goToArticle = (article: Article) => {
             </Card>
         </div>
 
-        <div v-if="feedStore.loading && feedStore.hasMore" class="grid gap-6">
+        <div
+            v-if="feedStore.loading && feedStore.hasMore"
+            class="grid gap-6 mt-6"
+        >
             <SkeletonCard v-for="n in 4" :key="'skeleton-' + n" />
         </div>
     </div>

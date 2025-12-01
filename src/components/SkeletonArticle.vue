@@ -36,13 +36,11 @@ import { Skeleton } from "@/components/ui/skeleton";
             </div>
         </CardHeader>
         <CardContent>
-            <Skeleton class="h-4 w-full mb-3" />
-            <Skeleton class="h-4 w-full mb-3" />
-            <Skeleton class="h-4 w-5/6 mb-3" />
-            <Skeleton class="h-4 w-full mb-3" />
-            <Skeleton class="h-4 w-4/5 mb-3" />
-            <Skeleton class="h-4 w-full mb-3" />
-            <Skeleton class="h-4 w-3/4" />
+            <div v-for="n in 7" :key="n" :class="n < 7 ? 'mb-3' : ''">
+                <Skeleton
+                    :class="`h-4 w-${['full', 'full', '5/6', 'full', '4/5', 'full', '3/4'][n - 1]}`"
+                />
+            </div>
         </CardContent>
     </Card>
 </template>
