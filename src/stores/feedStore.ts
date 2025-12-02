@@ -43,6 +43,8 @@ export const useFeedStore = defineStore("feed", () => {
   const error = ref<string | null>(null);
   const selectedTags = ref<string[]>([]);
   const searchQuery = ref("");
+  const currentTag = ref<string | null>(null);
+  const currentState = ref<string | null>(null);
   const hasMore = ref(true);
   const fullSlugToId = ref(new Map<string, number>());
   const articleDetailsCache = ref(new Map<number, FullArticle>());
@@ -88,21 +90,32 @@ export const useFeedStore = defineStore("feed", () => {
   };
 
   // Actions
-  const fetchArticles = async (page: number = 1, append: boolean = false) => {
+  const fetchArticles = async (
+    page: number = 1,
+    append: boolean = false,
+    tag?: string,
+    state?: string,
+  ) => {
     if (!append) {
       loading.value = true;
       articles.value = [];
+      currentTag.value = tag || null;
+      currentState.value = state || null;
     }
     error.value = null;
 
     try {
-      const url = `https://dev.to/api/articles?per_page=16&page=${page}`;
+      let url = `https://dev.to/api/articles?per_page=16&page=${page}`;
+      if (tag) {
+        url += `&tag=${encodeURIComponent(tag)}`;
+      }
+      if (state) {
+        url += `&state=${state}`;
+      }
       const response = await fetch(url);
       if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
       const data = await response.json();
-
-      await new Promise((resolve) => setTimeout(resolve, 10000));
 
       const transformedArticles: Article[] = data.map((item: any) => {
         const {
@@ -154,17 +167,25 @@ export const useFeedStore = defineStore("feed", () => {
     } catch (err) {
       error.value = err instanceof Error ? err.message : "Network error";
       // Retry once after 1s
-      if (!append) setTimeout(() => fetchArticles(page, append), 1000);
+      if (!append)
+        setTimeout(() => fetchArticles(page, append, tag, state), 1000);
     } finally {
       loading.value = false;
     }
   };
 
-  const loadMore = async () => {
+  const loadMore = async (tag?: string, state?: string) => {
+    const useTag = tag !== undefined ? tag : currentTag.value;
+    const useState = state !== undefined ? state : currentState.value;
     if (hasMore.value && !loading.value) {
       loading.value = true;
       const nextPage = articles.value.length / 16 + 1;
-      await fetchArticles(nextPage, true);
+      await fetchArticles(
+        nextPage,
+        true,
+        useTag || undefined,
+        useState || undefined,
+      );
     }
   };
 
@@ -179,6 +200,8 @@ export const useFeedStore = defineStore("feed", () => {
   const clearFilters = () => {
     selectedTags.value = [];
     searchQuery.value = "";
+    currentTag.value = null;
+    currentState.value = null;
   };
 
   return {
@@ -188,6 +211,8 @@ export const useFeedStore = defineStore("feed", () => {
     error,
     selectedTags,
     searchQuery,
+    currentTag,
+    currentState,
     hasMore,
     fullSlugToId,
     // Getters

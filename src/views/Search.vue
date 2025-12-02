@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { onMounted, ref, computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { useInfiniteScroll } from "@vueuse/core";
 import { useFeedStore } from "@/stores/feedStore";
 import { Button } from "@/components/ui/button";
@@ -11,30 +11,70 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Header from "@/components/Header.vue";
 import SkeletonCard from "@/components/SkeletonCard.vue";
 
-import { RotateCw, Heart, MessageCircle, Clock } from "lucide-vue-next";
+import { Heart, MessageCircle, Clock } from "lucide-vue-next";
 
 const feedStore = useFeedStore();
+const route = useRoute();
 const router = useRouter();
 
-useInfiniteScroll(window, () => feedStore.loadMore(), {
-    distance: 1500,
-    canLoadMore: () => feedStore.hasMore,
-});
+const searchQuery = computed(() => (route.query.q as string) || "");
+const currentTab = ref("Posts");
+const currentFilter = ref("Most relevant");
+
+const filterOptions = [
+    { label: "Most relevant", value: "" },
+    { label: "Newest", value: "fresh" },
+    { label: "Oldest", value: "all" },
+];
+
+const tabs = ["Posts", "People", "Organizations", "Tags", "Comments"];
+
+const fetchSearchResults = () => {
+    if (currentTab.value === "Posts") {
+        const state = filterOptions.find(
+            (f) => f.label === currentFilter.value,
+        )?.value;
+        feedStore.fetchArticles(1, false, searchQuery.value, state);
+    } else {
+        // Placeholder for other tabs
+        console.log(`Search for ${currentTab.value} not implemented yet`);
+    }
+};
+
+useInfiniteScroll(
+    window,
+    () => {
+        if (currentTab.value === "Posts") {
+            feedStore.loadMore(
+                searchQuery.value,
+                filterOptions.find((f) => f.label === currentFilter.value)
+                    ?.value,
+            );
+        }
+    },
+    {
+        distance: 1500,
+        canLoadMore: () => feedStore.hasMore,
+    },
+);
 
 onMounted(() => {
-    feedStore.fetchArticles(1, false);
+    fetchSearchResults();
 });
 
-const searchValue = ref("");
+const setTab = (tab: string) => {
+    currentTab.value = tab;
+    fetchSearchResults();
+};
 
-const handleSearch = () => {
-    router.push(`/search?q=${encodeURIComponent(searchValue.value)}`);
+const setFilter = (filter: string) => {
+    currentFilter.value = filter;
+    fetchSearchResults();
 };
 
 const goToArticle = (article: any) => {
@@ -46,28 +86,39 @@ const goToArticle = (article: any) => {
     <div class="container">
         <Header />
 
-        <div class="flex gap-4 mb-6">
-            <Input
-                v-model="searchValue"
-                placeholder="Search articles..."
-                @keydown.enter="handleSearch"
-                class="flex-1"
-            />
-            <Button
-                @click="feedStore.fetchArticles(1, false)"
-                :disabled="feedStore.loading"
-                aria-label="Refresh articles"
-            >
-                <RotateCw
-                    class="h-4 w-4"
-                    :class="{ 'animate-spin': feedStore.loading }"
-                />
-            </Button>
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold mb-4">
+                Search results for "{{ searchQuery }}"
+            </h1>
+
+            <div class="flex gap-2 mb-4">
+                <Button
+                    v-for="tab in tabs"
+                    :key="tab"
+                    :variant="currentTab === tab ? 'default' : 'outline'"
+                    @click="setTab(tab)"
+                >
+                    {{ tab }}
+                </Button>
+            </div>
+
+            <div class="flex gap-2 mb-4">
+                <Button
+                    v-for="filter in filterOptions"
+                    :key="filter.label"
+                    :variant="
+                        currentFilter === filter.label ? 'default' : 'outline'
+                    "
+                    @click="setFilter(filter.label)"
+                >
+                    {{ filter.label }}
+                </Button>
+            </div>
         </div>
 
-        <div class="grid gap-6">
+        <div v-if="currentTab === 'Posts'" class="grid gap-6">
             <Card
-                v-for="article in feedStore.filteredArticles"
+                v-for="article in feedStore.articles"
                 :key="article.id"
                 class="cursor-pointer hover:shadow-md transition-shadow flex flex-col"
                 @click="goToArticle(article)"
@@ -142,6 +193,13 @@ const goToArticle = (article: any) => {
                     </div>
                 </CardFooter>
             </Card>
+        </div>
+
+        <div v-else class="text-center py-8">
+            <p class="text-muted-foreground">
+                Search for {{ currentTab.toLowerCase() }} is not implemented
+                yet.
+            </p>
         </div>
 
         <div
