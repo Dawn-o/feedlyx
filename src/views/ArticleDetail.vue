@@ -3,7 +3,9 @@ import { onMounted, ref, computed, nextTick, watch } from "vue";
 import { useRoute } from "vue-router";
 import hljs from "highlight.js";
 import "highlight.js/styles/base16/twilight.css";
-import { useFeedStore, type FullArticle } from "@/stores/feedStore";
+import { useArticlesStore } from "@/stores/articlesStore";
+import { useArticleDetailStore } from "@/stores/articleDetailStore";
+import type { FullArticle } from "@/types";
 import { processArticleHtml } from "@/utils/processArticleHtml";
 import ArticleHeader from "@/components/ArticleHeader.vue";
 import SkeletonArticle from "@/components/SkeletonArticle.vue";
@@ -13,7 +15,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Heart, MessageCircle, Clock } from "lucide-vue-next";
 
 const route = useRoute();
-const feedStore = useFeedStore();
+const articlesStore = useArticlesStore();
+const articleDetailStore = useArticleDetailStore();
 const article = ref<FullArticle | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -33,7 +36,9 @@ const fetchUserArticles = async (username: string, slug: string) => {
         const data = await response.json();
         const found = data.find((item: any) => item.slug === slug);
         if (found) {
-            const fullArticle = await feedStore.fetchArticleDetail(found.id);
+            const fullArticle = await articleDetailStore.fetchArticleDetail(
+                found.id,
+            );
             if (fullArticle) {
                 article.value = fullArticle;
             } else {
@@ -60,9 +65,9 @@ onMounted(async () => {
     const username = route.params.username as string;
     const slug = route.params.slug as string;
     const key = `${username}-${slug}`;
-    const id = feedStore.fullSlugToId.get(key);
+    const id = articlesStore.fullSlugToId.get(key);
     if (id) {
-        const fullArticle = await feedStore.fetchArticleDetail(id);
+        const fullArticle = await articleDetailStore.fetchArticleDetail(id);
         if (fullArticle) {
             article.value = fullArticle;
         } else {

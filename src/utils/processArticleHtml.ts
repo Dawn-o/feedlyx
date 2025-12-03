@@ -45,8 +45,14 @@ export function processArticleHtml(bodyHtml: string): string {
     /<blockquote>/g,
     '<blockquote class="border-l-4 border-primary pl-6 italic mb-6 text-foreground bg-muted/30 p-4 rounded-r-lg shadow-sm">',
   );
-  html = html.replace(/<pre>/g, '<pre class="mb-6 overflow-x-auto">');
-  html = html.replace(/<code>/g, '<code class="mb-6 font-mono text-sm">');
+  html = html.replace(
+    /<pre>/g,
+    '<pre class="mb-6 overflow-x-auto bg-muted p-4 rounded">',
+  );
+  html = html.replace(
+    /<code>/g,
+    '<code class="mb-6 bg-muted px-1 py-0.5 rounded font-mono text-sm">',
+  );
   html = html.replace(
     /<a /g,
     '<a class="text-primary hover:text-primary/80 transition-colors duration-200 underline decoration-2 underline-offset-2" ',
@@ -57,5 +63,17 @@ export function processArticleHtml(bodyHtml: string): string {
     '<strong class="font-semibold text-foreground">',
   );
   html = html.replace(/<em>/g, '<em class="italic text-muted-foreground">');
+  html = html.replace(
+    /<table>/g,
+    '<table class="w-full border-collapse border border-border mb-6 overflow-hidden shadow-sm">',
+  );
+  html = html.replace(
+    /<th>/g,
+    '<th class="border border-border px-4 py-3 bg-muted font-semibold text-left text-foreground">',
+  );
+  html = html.replace(
+    /<td>/g,
+    '<td class="border border-border px-4 py-3 text-foreground">',
+  );
   return html;
 }

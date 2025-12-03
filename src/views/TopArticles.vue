@@ -3,7 +3,6 @@ import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useInfiniteScroll } from "@vueuse/core";
 import { useArticlesStore } from "@/stores/articlesStore";
-
 import Header from "@/components/Header.vue";
 import ArticleCard from "@/components/ArticleCard.vue";
 import FeedNavigation from "@/components/FeedNavigation.vue";
@@ -12,13 +11,13 @@ import SkeletonCard from "@/components/SkeletonCard.vue";
 const articlesStore = useArticlesStore();
 const router = useRouter();
 
-useInfiniteScroll(window, () => articlesStore.loadMore("articles"), {
+useInfiniteScroll(window, () => articlesStore.loadMore("articles?top=1"), {
     distance: 1500,
     canLoadMore: () => articlesStore.hasMore,
 });
 
 onMounted(() => {
-    articlesStore.fetchArticles(1, false, "articles");
+    articlesStore.fetchArticles(1, false, "articles?top=1");
 });
 
 const goToArticle = (article: any) => {
@@ -30,7 +29,7 @@ const goToArticle = (article: any) => {
     <div class="container">
         <Header />
 
-        <FeedNavigation currentPage="home" />
+        <FeedNavigation currentPage="top" />
 
         <div class="grid gap-6">
             <ArticleCard

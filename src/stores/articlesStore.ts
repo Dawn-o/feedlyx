@@ -1,66 +1,30 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
+import type { Article } from "@/types";
+import { useSearchStore } from "@/stores/searchStore";
 
-export interface Article {
-  id: number;
-  title: string;
-  description: string;
-  url: string;
-  publishedAt: string;
-  source: string;
-  tags: string[];
-  author: string;
-  username: string;
-  image?: string;
-  profileImage?: string;
-  readingTime?: number;
-  reactionsCount?: number;
-  commentsCount?: number;
-  slug: string;
-}
+export const useArticlesStore = defineStore("articles", () => {
+  const searchStore = useSearchStore();
 
-export interface FullArticle {
-  id: number;
-  title: string;
-  body_markdown: string;
-  body_html: string;
-  published_at: string;
-  user: {
-    name: string;
-    profile_image_90: string;
-  };
-  tags: string[];
-  positive_reactions_count: number;
-  comments_count: number;
-  reading_time_minutes: number;
-  url: string;
-}
-
-export const useFeedStore = defineStore("feed", () => {
   // State
   const articles = ref<Article[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
-  const selectedTags = ref<string[]>([]);
-  const searchQuery = ref("");
-  const currentTag = ref<string | null>(null);
-  const currentState = ref<string | null>(null);
   const hasMore = ref(true);
   const fullSlugToId = ref(new Map<string, number>());
-  const articleDetailsCache = ref(new Map<number, FullArticle>());
 
   // Getters
   const filteredArticles = computed(() => {
     let filtered = articles.value;
 
-    if (selectedTags.value.length > 0) {
+    if (searchStore.selectedTags.length > 0) {
       filtered = filtered.filter((article) =>
-        selectedTags.value.some((tag) => article.tags.includes(tag)),
+        searchStore.selectedTags.some((tag) => article.tags.includes(tag)),
       );
     }
 
-    if (searchQuery.value) {
-      const query = searchQuery.value.toLowerCase();
+    if (searchStore.searchQuery) {
+      const query = searchStore.searchQuery.toLowerCase();
       filtered = filtered.filter(
         (article) =>
           article.title.toLowerCase().includes(query) ||
@@ -72,42 +36,25 @@ export const useFeedStore = defineStore("feed", () => {
   });
 
   // Actions
-  const fetchArticleDetail = async (
-    id: number,
-  ): Promise<FullArticle | null> => {
-    if (articleDetailsCache.value.has(id)) {
-      return articleDetailsCache.value.get(id)!;
-    }
-    try {
-      const response = await fetch(`https://dev.to/api/articles/${id}`);
-      if (!response.ok) return null;
-      const article = await response.json();
-      articleDetailsCache.value.set(id, article);
-      return article;
-    } catch {
-      return null;
-    }
-  };
-
-  // Actions
   const fetchArticles = async (
     page: number = 1,
     append: boolean = false,
-    tag?: string,
+    endpoint: string = "articles",
+    tags?: string[],
     state?: string,
   ) => {
     if (!append) {
       loading.value = true;
       articles.value = [];
-      currentTag.value = tag || null;
-      currentState.value = state || null;
+      searchStore.setCurrentTags(tags || []);
+      searchStore.currentState = state || null;
     }
     error.value = null;
 
     try {
-      let url = `https://dev.to/api/articles?per_page=16&page=${page}`;
-      if (tag) {
-        url += `&tag=${encodeURIComponent(tag)}`;
+      let url = `https://dev.to/api/${endpoint}?per_page=16&page=${page}`;
+      if (tags && tags.length > 0) {
+        url += `&tag=${encodeURIComponent(tags.join(","))}`;
       }
       if (state) {
         url += `&state=${state}`;
@@ -168,61 +115,44 @@ export const useFeedStore = defineStore("feed", () => {
       error.value = err instanceof Error ? err.message : "Network error";
       // Retry once after 1s
       if (!append)
-        setTimeout(() => fetchArticles(page, append, tag, state), 1000);
+        setTimeout(
+          () => fetchArticles(page, append, endpoint, tags, state),
+          1000,
+        );
     } finally {
       loading.value = false;
     }
   };
 
-  const loadMore = async (tag?: string, state?: string) => {
-    const useTag = tag !== undefined ? tag : currentTag.value;
-    const useState = state !== undefined ? state : currentState.value;
+  const loadMore = async (
+    endpoint?: string,
+    tags?: string[],
+    state?: string,
+  ) => {
+    const useEndpoint = endpoint !== undefined ? endpoint : "articles";
+    const useTags = tags !== undefined ? tags : searchStore.currentTags;
+    const useState = state !== undefined ? state : searchStore.currentState;
     if (hasMore.value && !loading.value) {
       loading.value = true;
       const nextPage = articles.value.length / 16 + 1;
       await fetchArticles(
         nextPage,
         true,
-        useTag || undefined,
+        useEndpoint,
+        useTags,
         useState || undefined,
       );
     }
   };
 
-  const setSelectedTags = (tags: string[]) => {
-    selectedTags.value = tags;
-  };
-
-  const setSearchQuery = (query: string) => {
-    searchQuery.value = query;
-  };
-
-  const clearFilters = () => {
-    selectedTags.value = [];
-    searchQuery.value = "";
-    currentTag.value = null;
-    currentState.value = null;
-  };
-
   return {
-    // State
     articles,
     loading,
     error,
-    selectedTags,
-    searchQuery,
-    currentTag,
-    currentState,
     hasMore,
     fullSlugToId,
-    // Getters
     filteredArticles,
-    // Actions
     fetchArticles,
     loadMore,
-    fetchArticleDetail,
-    setSelectedTags,
-    setSearchQuery,
-    clearFilters,
   };
 });
