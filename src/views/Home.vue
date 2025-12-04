@@ -4,7 +4,6 @@ import { useRouter } from "vue-router";
 import { useInfiniteScroll } from "@vueuse/core";
 import { useArticlesStore } from "@/stores/articlesStore";
 
-import Header from "@/components/Header.vue";
 import ArticleCard from "@/components/ArticleCard.vue";
 import FeedNavigation from "@/components/FeedNavigation.vue";
 import SkeletonCard from "@/components/SkeletonCard.vue";
@@ -27,25 +26,21 @@ const goToArticle = (article: any) => {
 </script>
 
 <template>
-    <div class="container">
-        <Header />
+    <FeedNavigation currentPage="home" />
 
-        <FeedNavigation currentPage="home" />
+    <div class="grid gap-6">
+        <ArticleCard
+            v-for="article in articlesStore.filteredArticles"
+            :key="article.id"
+            :article="article"
+            @click="goToArticle"
+        />
+    </div>
 
-        <div class="grid gap-6">
-            <ArticleCard
-                v-for="article in articlesStore.filteredArticles"
-                :key="article.id"
-                :article="article"
-                @click="goToArticle"
-            />
-        </div>
-
-        <div
-            v-if="articlesStore.loading && articlesStore.hasMore"
-            class="grid gap-6 mt-6"
-        >
-            <SkeletonCard v-for="n in 4" :key="'skeleton-' + n" />
-        </div>
+    <div
+        v-if="articlesStore.loading && articlesStore.hasMore"
+        class="grid gap-6 mt-6"
+    >
+        <SkeletonCard v-for="n in 4" :key="'skeleton-' + n" />
     </div>
 </template>

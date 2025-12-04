@@ -11,7 +11,7 @@ const searchValue = ref("");
 const handleSearch = () => {
     if (searchValue.value.trim()) {
         router.push(
-            `/search?q=${encodeURIComponent(searchValue.value.trim())}`,
+            `/search?q=${encodeURIComponent(searchValue.value.trim()).replace(/%20/g, "+")}`,
         );
     }
 };

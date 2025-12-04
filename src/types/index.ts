@@ -32,3 +32,11 @@ export interface FullArticle {
   reading_time_minutes: number;
   url: string;
 }
+
+export interface Tag {
+  id: number;
+  name: string;
+  short_summary?: string;
+  bg_color_hex?: string;
+  text_color_hex?: string;
+}

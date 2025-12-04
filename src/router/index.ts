@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/views/Home.vue";
-import LatestArticles from "@/views/LatestArticles.vue";
-import TopArticles from "@/views/TopArticles.vue";
-import ArticleDetail from "@/views/ArticleDetail.vue";
+import Latest from "@/views/Latest.vue";
+import Top from "@/views/Top.vue";
 import Search from "@/views/Search.vue";
+import ArticleDetail from "@/views/ArticleDetail.vue";
 
 const routes = [
   {
@@ -14,12 +14,12 @@ const routes = [
   {
     path: "/latest",
     name: "Latest",
-    component: () => LatestArticles,
+    component: () => Latest,
   },
   {
     path: "/top",
     name: "Top",
-    component: () => TopArticles,
+    component: () => Top,
   },
   {
     path: "/search",

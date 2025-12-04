@@ -52,7 +52,7 @@ export const useArticlesStore = defineStore("articles", () => {
     error.value = null;
 
     try {
-      let url = `https://dev.to/api/${endpoint}?per_page=16&page=${page}`;
+      let url = `${import.meta.env.VITE_API_BASE_URL}/${endpoint}?per_page=16&page=${page}`;
       if (tags && tags.length > 0) {
         url += `&tag=${encodeURIComponent(tags.join(","))}`;
       }

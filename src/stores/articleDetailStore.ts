@@ -12,7 +12,9 @@ export const useArticleDetailStore = defineStore("articleDetail", () => {
       return articleDetailsCache.value.get(id)!;
     }
     try {
-      const response = await fetch(`https://dev.to/api/articles/${id}`);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/articles/${id}`,
+      );
       if (!response.ok) return null;
       const article = await response.json();
       articleDetailsCache.value.set(id, article);
@@ -22,8 +24,29 @@ export const useArticleDetailStore = defineStore("articleDetail", () => {
     }
   };
 
+  const fetchArticleByUsernameSlug = async (
+    username: string,
+    slug: string,
+  ): Promise<FullArticle | null> => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/articles?username=${username}&per_page=30`,
+      );
+      if (!response.ok) throw new Error("Failed to fetch user articles");
+      const data = await response.json();
+      const found = data.find((item: any) => item.slug === slug);
+      if (found) {
+        return await fetchArticleDetail(found.id);
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
   return {
     articleDetailsCache,
     fetchArticleDetail,
+    fetchArticleByUsernameSlug,
   };
 });
