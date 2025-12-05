@@ -20,7 +20,7 @@ const navItems = [
         <Button
             v-for="item in navItems"
             :key="item.key"
-            :variant="currentPage === item.key ? 'default' : 'outline'"
+            :variant="currentPage === item.key ? 'default' : 'ghost'"
             @click="router.push(item.path)"
         >
             {{ item.label }}

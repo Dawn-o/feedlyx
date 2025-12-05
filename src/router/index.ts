@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import Home from "@/views/Home.vue";
 import Latest from "@/views/Latest.vue";
 import Top from "@/views/Top.vue";
+import Tag from "@/views/Tag.vue";
 import Search from "@/views/Search.vue";
 import ArticleDetail from "@/views/ArticleDetail.vue";
 
@@ -20,6 +21,11 @@ const routes = [
     path: "/top",
     name: "Top",
     component: () => Top,
+  },
+  {
+    path: "/t/:tags",
+    name: "Tags",
+    component: () => Tag,
   },
   {
     path: "/search",

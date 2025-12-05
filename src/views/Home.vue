@@ -5,7 +5,10 @@ import { useInfiniteScroll } from "@vueuse/core";
 import { useArticlesStore } from "@/stores/articlesStore";
 
 import ArticleCard from "@/components/ArticleCard.vue";
+import DiscussCard from "@/components/DiscussCard.vue";
 import FeedNavigation from "@/components/FeedNavigation.vue";
+import HomeLayout from "@/components/HomeLayout.vue";
+import PopularTags from "@/components/PopularTags.vue";
 import SkeletonCard from "@/components/SkeletonCard.vue";
 
 const articlesStore = useArticlesStore();
@@ -18,6 +21,8 @@ useInfiniteScroll(window, () => articlesStore.loadMore("articles"), {
 
 onMounted(() => {
     articlesStore.fetchArticles(1, false, "articles");
+    articlesStore.fetchDiscuss();
+    articlesStore.fetchPopularTags();
 });
 
 const goToArticle = (article: any) => {
@@ -26,21 +31,33 @@ const goToArticle = (article: any) => {
 </script>
 
 <template>
-    <FeedNavigation currentPage="home" />
+    <div>
+        <HomeLayout>
+            <template #left>
+                <PopularTags />
+            </template>
+            <template #main>
+                <FeedNavigation currentPage="home" />
 
-    <div class="grid gap-6">
-        <ArticleCard
-            v-for="article in articlesStore.filteredArticles"
-            :key="article.id"
-            :article="article"
-            @click="goToArticle"
-        />
-    </div>
+                <div class="grid gap-6">
+                    <ArticleCard
+                        v-for="article in articlesStore.filteredArticles"
+                        :key="article.id"
+                        :article="article"
+                        @click="goToArticle"
+                    />
+                </div>
 
-    <div
-        v-if="articlesStore.loading && articlesStore.hasMore"
-        class="grid gap-6 mt-6"
-    >
-        <SkeletonCard v-for="n in 4" :key="'skeleton-' + n" />
+                <div
+                    v-if="articlesStore.loading && articlesStore.hasMore"
+                    class="grid gap-6 mt-6"
+                >
+                    <SkeletonCard v-for="n in 4" :key="'skeleton-' + n" />
+                </div>
+            </template>
+            <template #right>
+                <DiscussCard />
+            </template>
+        </HomeLayout>
     </div>
 </template>
