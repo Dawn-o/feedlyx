@@ -23,6 +23,11 @@ const routes = [
     component: () => Top,
   },
   {
+    path: "/t/:tags/page/:page",
+    name: "TagPage",
+    component: () => Tag,
+  },
+  {
     path: "/t/:tags",
     name: "Tags",
     component: () => Tag,

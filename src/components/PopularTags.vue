@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { useRouter } from "vue-router";
 import { useArticlesStore } from "@/stores/articlesStore";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const articlesStore = useArticlesStore();
+const router = useRouter();
 </script>
 
 <template>
@@ -16,6 +18,7 @@ const articlesStore = useArticlesStore();
                     :key="tag.id"
                     variant="ghost"
                     class="w-full justify-start"
+                    @click="router.push('/t/' + tag.name)"
                 >
                     #{{ tag.name }}
                 </Button>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useRouter } from "vue-router";
 import type { Article } from "@/types";
 import {
     Card,
@@ -10,6 +11,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Heart, MessageCircle, Clock } from "lucide-vue-next";
+
+const router = useRouter();
 
 const props = defineProps<{
     article: Article;
@@ -66,6 +69,7 @@ const handleClick = () => {
                             v-for="tag in article.tags.slice(0, 3)"
                             :key="tag"
                             variant="outline"
+                            @click.stop="router.push('/t/' + tag)"
                             >#{{ tag }}</Badge
                         >
                     </div>

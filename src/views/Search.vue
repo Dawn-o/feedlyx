@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, computed, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useInfiniteScroll } from "@vueuse/core";
 import { useArticlesStore } from "@/stores/articlesStore";
+import { useRoute, useRouter } from "vue-router";
+import { computed, onMounted, watch } from "vue";
+import { useInfiniteScroll } from "@vueuse/core";
+
 import SkeletonCard from "@/components/SkeletonCard.vue";
 import ArticleCard from "@/components/ArticleCard.vue";
 import EmptyState from "@/components/EmptyState.vue";

@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { useArticlesStore } from "@/stores/articlesStore";
 import { useRouter } from "vue-router";
 import { useInfiniteScroll } from "@vueuse/core";
-import { useArticlesStore } from "@/stores/articlesStore";
-import ArticleCard from "@/components/ArticleCard.vue";
-import DiscussCard from "@/components/DiscussCard.vue";
-import FeedNavigation from "@/components/FeedNavigation.vue";
+import { onMounted } from "vue";
+
 import HomeLayout from "@/components/HomeLayout.vue";
 import PopularTags from "@/components/PopularTags.vue";
+import FeedNavigation from "@/components/FeedNavigation.vue";
+import ArticleCard from "@/components/ArticleCard.vue";
 import SkeletonCard from "@/components/SkeletonCard.vue";
+import DiscussCard from "@/components/DiscussCard.vue";
+import TrendingGuides from "@/components/TrendingGuides.vue";
 
 const articlesStore = useArticlesStore();
 const router = useRouter();
@@ -22,6 +24,7 @@ onMounted(() => {
     articlesStore.fetchArticles(1, false, "articles?top=1");
     articlesStore.fetchPopularTags();
     articlesStore.fetchDiscuss();
+    articlesStore.fetchTrendingGuides("webdev");
 });
 
 const goToArticle = (article: any) => {
@@ -55,6 +58,7 @@ const goToArticle = (article: any) => {
         </template>
         <template #right>
             <DiscussCard />
+            <TrendingGuides />
         </template>
     </HomeLayout>
 </template>

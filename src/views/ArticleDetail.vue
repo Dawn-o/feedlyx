@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, nextTick, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useArticlesStore } from "@/stores/articlesStore";
 import { useArticleDetailStore } from "@/stores/articleDetailStore";
 import type { FullArticle } from "@/types";
+import { ref, computed, nextTick, watch, onMounted } from "vue";
 import { processArticleHtml } from "@/utils/processArticleHtml";
 import hljs from "highlight.js";
 import "highlight.js/styles/base16/twilight.css";
+
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-vue-next";
 import SkeletonArticle from "@/components/SkeletonArticle.vue";
@@ -22,7 +23,6 @@ const articlesStore = useArticlesStore();
 const articleDetailStore = useArticleDetailStore();
 const article = ref<FullArticle | null>(null);
 const loading = ref(true);
-const contentRef = ref<HTMLElement>();
 
 const processedBodyHtml = computed(() => {
     if (!article.value) return "";
